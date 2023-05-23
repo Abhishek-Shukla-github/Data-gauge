@@ -11,11 +11,8 @@ import SearchIcon from "@mui/icons-material/Search";
 
 const Topbar = () => {
   const theme = useTheme();
-  console.log("theme",theme)
   const colors = tokens(theme.palette.mode);
-  console.log("colors",colors)
   const colorMode = useContext(ColorModeContext);
-  console.log("colorMode",colorMode)
 
   return (
     <Box display="flex" justifyContent="space-between" p={2}>
