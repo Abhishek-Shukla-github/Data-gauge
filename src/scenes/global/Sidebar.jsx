@@ -199,9 +199,9 @@ const Sidebar = () => {
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
             {SidebarData.map((SidebarItem, i) => (
               // 1, 3, 6
-              <>
+              <div  key={SidebarItem.to}>
                 <Item
-                  key={SidebarItem.to}
+                 
                   title={SidebarItem.title}
                   to={SidebarItem.to}
                   icon={SidebarItem.icon}
@@ -219,7 +219,7 @@ const Sidebar = () => {
                     </Typography>
                   ) : null}
                 </div>
-              </>
+              </div>
             ))}
           </Box>
         </Menu>
