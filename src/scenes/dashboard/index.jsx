@@ -122,10 +122,6 @@ const Dashboard = () => {
           alignItems="center"
           justifyContent="center"
         >
-          {console.log(
-            "dataState?.emailsCount?.count",
-            dataState?.emailsCount?.count.toLocaleString
-          )}
           {!loadingStates.emailsCount && dataState?.emailsCount?.count ? (
             <StatBox
               title={dataState?.emailsCount?.count?.toLocaleString()}

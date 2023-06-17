@@ -30,7 +30,6 @@ const changeLoaderState = (
   keywords.forEach((key) => {
     tempStateObj[key] = booleanValue;
   });
-  console.log("tempStateObj", tempStateObj);
   loadingStateSetter({ ...loadingStates, ...tempStateObj });
 };
 
@@ -39,7 +38,5 @@ const changeDataState = (data, keywords, dataState, dataStateSetter) => {
   keywords.forEach((key, i) => {
     tempStateObj[key] = data[i];
   });
-  console.log("tempStateObjDATAAAAA", tempStateObj);
-  console.log("dataState", dataState);
   dataStateSetter({ ...dataState, ...tempStateObj });
 };
