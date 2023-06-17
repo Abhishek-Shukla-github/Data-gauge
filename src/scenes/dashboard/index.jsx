@@ -1,4 +1,3 @@
-
 import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { mockTransactions } from "../../data/mockData";
@@ -13,17 +12,85 @@ import GeographyChart from "../../components/GeographyChart";
 import BarChart from "../../components/BarChart";
 import StatBox from "../../components/StatBox";
 import ProgressCircle from "../../components/ProgressCircle";
+import { Bars, ThreeDots } from "react-loader-spinner";
+import { CommonAPICaller } from "../../utils/api";
+import { useEffect, useState } from "react";
+import "../../mirage/mirage";
 
 const Dashboard = () => {
+  // <-------------------------------------------------------------CONSTANTS------------------------------------------------------------------------->
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const urlsToBeLoaded = ["/api/emailsCount", "/api/salesCount"];
+  const StateKeywords = ["emailsCount", "salesCount"];
+
+  // <-------------------------------------------------------------STATES------------------------------------------------------------------------->
+  const [loadingStates, setLoadingStates] = useState({
+    emailsCount: false,
+    salesCount: false,
+    newClientsCount: false,
+  });
+  const [dataState, setDataState] = useState({});
+
+  // <-------------------------------------------------------------useEFFECTS------------------------------------------------------------------------->
+  useEffect(() => {
+    CommonAPICaller(
+      urlsToBeLoaded,
+      StateKeywords,
+      loadingStates,
+      setLoadingStates,
+      dataState,
+      setDataState
+    );
+  }, []);
+
+  useEffect(() => {
+    if (dataState?.salesCount)
+      CommonAPICaller(
+        ["/api/newClientsCount"],
+        ["newClientsCount"],
+        loadingStates,
+        setLoadingStates,
+        dataState,
+        setDataState
+      );
+  }, [dataState.salesCount]);
+
+  // <-------------------------------------------------------------HELPER FUNCTIONS------------------------------------------------------------------------->
+  const renderLoader = () => {
+    return (
+      <Bars
+        height="80"
+        width="80"
+        color="#4cceac"
+        ariaLabel="bars-loading"
+        wrapperStyle={{}}
+        wrapperClass=""
+        visible={true}
+      />
+    );
+  };
+
+  const renderDotLoader = () => {
+    return (
+      <ThreeDots
+        height="30"
+        width="60"
+        radius="9"
+        color="#4cceac"
+        ariaLabel="three-dots-loading"
+        wrapperStyle={{}}
+        wrapperClassName=""
+        visible={true}
+      />
+    );
+  };
 
   return (
     <Box m="20px">
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
-
         <Box>
           <Button
             sx={{
@@ -55,17 +122,25 @@ const Dashboard = () => {
           alignItems="center"
           justifyContent="center"
         >
-          <StatBox
-            title="12,361"
-            subtitle="Emails Sent"
-            progress="0.75"
-            increase="+14%"
-            icon={
-              <EmailIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
+          {console.log(
+            "dataState?.emailsCount?.count",
+            dataState?.emailsCount?.count.toLocaleString
+          )}
+          {!loadingStates.emailsCount && dataState?.emailsCount?.count ? (
+            <StatBox
+              title={dataState?.emailsCount?.count?.toLocaleString()}
+              subtitle="Emails Sent"
+              progress={dataState?.emailsCount?.progress}
+              increase={dataState?.emailsCount?.delta}
+              icon={
+                <EmailIcon
+                  sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+                />
+              }
+            />
+          ) : (
+            renderLoader()
+          )}
         </Box>
         <Box
           gridColumn="span 3"
@@ -74,17 +149,21 @@ const Dashboard = () => {
           alignItems="center"
           justifyContent="center"
         >
-          <StatBox
-            title="431,225"
-            subtitle="Sales Obtained"
-            progress="0.50"
-            increase="+21%"
-            icon={
-              <PointOfSaleIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
+          {!loadingStates.salesCount && dataState?.salesCount?.count ? (
+            <StatBox
+              title={dataState?.salesCount?.count?.toLocaleString()}
+              subtitle="Sales Obtained"
+              progress={dataState?.salesCount?.progress}
+              increase={dataState?.salesCount?.delta}
+              icon={
+                <PointOfSaleIcon
+                  sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+                />
+              }
+            />
+          ) : (
+            renderLoader()
+          )}
         </Box>
         <Box
           gridColumn="span 3"
@@ -93,17 +172,28 @@ const Dashboard = () => {
           alignItems="center"
           justifyContent="center"
         >
-          <StatBox
-            title="32,441"
-            subtitle="New Clients"
-            progress="0.30"
-            increase="+5%"
-            icon={
-              <PersonAddIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
+          {
+            <StatBox
+              title={
+                !loadingStates.emailsCount &&
+                !loadingStates.salesCount &&
+                !loadingStates.newClientsCount
+                  ? dataState?.newClientsCount?.count?.toLocaleString()
+                  : loadingStates.newClientsCount
+                  ? renderDotLoader()
+                  : null
+              }
+              subtitle="New Clients"
+              progress={dataState?.newClientsCount?.progress}
+              increase={dataState?.newClientsCount?.delta}
+              showProgress={dataState?.newClientsCount?.count ? true : false}
+              icon={
+                <PersonAddIcon
+                  sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+                />
+              }
+            />
+          }
         </Box>
         <Box
           gridColumn="span 3"

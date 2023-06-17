@@ -27,8 +27,10 @@
     "@nivo/line": "^0.83.0",
     "@nivo/pie": "^0.83.0",
     "formik": "^2.2.9",
+    "miragejs": "^0.1.47",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-loader-spinner": "^5.3.4",
     "react-pro-sidebar": "^0.7.1",
     "react-router-dom": "^6.11.2",
     "yup": "^1.1.1"
