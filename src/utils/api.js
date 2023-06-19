@@ -5,12 +5,16 @@ export async function CommonAPICaller(
   loadingStates,
   loadingStateSetter,
   dataState,
-  dataStateSetter
+  dataStateSetter,
+  toastSuccessInfo,
+  toastProcessingInfo,
+  toastNotifications
 ) {
   const requests = urls.map((url) => fetch(url));
 
   //Changing the loader states to showcase the loader once the API call is made
   changeLoaderState(true, keywords, loadingStates, loadingStateSetter);
+  toastProcessingInfo?.type === "processing" &&  toastNotifications.processing(toastProcessingInfo.message)
   const responses = await Promise.all(requests);
   const json = responses.map((response) => response.json());
   const data = await Promise.all(json);
@@ -18,6 +22,7 @@ export async function CommonAPICaller(
   //Changing the loader states to false , post API Resolution
   changeDataState(data, keywords, dataState, dataStateSetter);
   changeLoaderState(false, keywords, loadingStates, loadingStateSetter);
+  toastNotifications.success(toastSuccessInfo.message)
 }
 
 const changeLoaderState = (

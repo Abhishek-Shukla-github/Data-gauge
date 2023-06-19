@@ -1,3 +1,4 @@
+import { useEffect, useState, useRef } from "react";
 import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { mockTransactions } from "../../data/mockData";
@@ -14,11 +15,13 @@ import StatBox from "../../components/StatBox";
 import ProgressCircle from "../../components/ProgressCircle";
 import { Bars, ThreeDots } from "react-loader-spinner";
 import { CommonAPICaller } from "../../utils/api";
-import { useEffect, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "../../mirage/mirage";
 
 const Dashboard = () => {
   // <-------------------------------------------------------------CONSTANTS------------------------------------------------------------------------->
+  const ref = useRef(false);  //Ref is used to prevent the twice execution of useEffect
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const urlsToBeLoaded = ["/api/emailsCount", "/api/salesCount"];
@@ -34,14 +37,23 @@ const Dashboard = () => {
 
   // <-------------------------------------------------------------useEFFECTS------------------------------------------------------------------------->
   useEffect(() => {
-    CommonAPICaller(
-      urlsToBeLoaded,
-      StateKeywords,
-      loadingStates,
-      setLoadingStates,
-      dataState,
-      setDataState
-    );
+    if(ref.current === false){
+      CommonAPICaller(
+        urlsToBeLoaded,
+        StateKeywords,
+        loadingStates,
+        setLoadingStates,
+        dataState,
+        setDataState,
+        {
+          type : "success",
+          message: <p> <strong>Emails Sent</strong> and  <strong>Sales Obtained</strong> are loaded</p>,
+        },
+        null,
+        toastNotifications,
+      );
+      return () => ref.current = true;
+    }
   }, []);
 
   useEffect(() => {
@@ -52,9 +64,19 @@ const Dashboard = () => {
         loadingStates,
         setLoadingStates,
         dataState,
-        setDataState
+        setDataState,
+        {
+          type : "success",
+          message: <p><strong>New Clients</strong> are now loaded</p>,
+        },
+        {
+          type : "processing",
+          message: <p>Now fetching <strong>New Clients</strong>...</p>,
+        },
+        toastNotifications
       );
   }, [dataState.salesCount]);
+
 
   // <-------------------------------------------------------------HELPER FUNCTIONS------------------------------------------------------------------------->
   const renderLoader = () => {
@@ -86,9 +108,50 @@ const Dashboard = () => {
     );
   };
 
+  const toastNotifications = {
+    processing : (message) => toast.info(message ? message : "Success", {
+      position: 'top-right',
+      autoClose: 15000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: 0,
+      progressStyle: { background: colors.blueAccent[800] },
+      //  : {background: colors.greenAccent[800]},
+      theme: 'colored',
+      style: { background: colors.blueAccent[600] },
+    }),
+    success : (message) => toast.success(message ? message : "Success", {
+      position: 'top-right',
+      autoClose: 15000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: 0,
+      progressStyle: { background: colors.greenAccent[800] },
+      //  : {background: colors.greenAccent[800]},
+      theme: 'colored',
+      style: { background: colors.greenAccent[600] },
+    })
+  }
+
+
   return (
     <Box m="20px">
-      {/* HEADER */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
         <Box>
