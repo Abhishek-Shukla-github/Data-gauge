@@ -30,5 +30,6 @@ createServer({
     });
 
     this.passthrough("https://api.escuelajs.co/**")
+    this.passthrough("https://randomuser.me/**")
   },
 });

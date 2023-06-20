@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link } from "react-router-dom";
@@ -15,6 +15,7 @@ import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutl
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
+import { CirclesWithBar } from "react-loader-spinner";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -35,11 +36,15 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
 };
 
 const Sidebar = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
+  // <-------------------------------------------------------------STATES------------------------------------------------------------------------->
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
+  const [userData, setUserData] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
+  // <-------------------------------------------------------------CONSTANTS------------------------------------------------------------------------->
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
   const SidebarData = [
     {
       title: "Dashboard",
@@ -120,6 +125,63 @@ const Sidebar = () => {
     },
   ];
 
+  // <-------------------------------------------------------------useEFFECTS------------------------------------------------------------------------->
+  useEffect(() => {
+    loadRandomUserAPI();
+  }, []);
+
+  // <-------------------------------------------------------------HELPER FUNCTIONS------------------------------------------------------------------------->
+  const circularProfileLoader = () => {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CirclesWithBar
+          height="100"
+          width="100"
+          color={colors.greenAccent[400]}
+          wrapperStyle={{}}
+          wrapperClass=""
+          visible={true}
+          outerCircleColor=""
+          innerCircleColor=""
+          barColor=""
+          ariaLabel="circles-with-bar-loading"
+        />
+      </div>
+    );
+  };
+
+  const loadRandomUserAPI = () => {
+    setIsLoading(true);
+    fetch("https://randomuser.me/api")
+      .then((response) => response.json())
+      .then((json) => {
+        let UserDataObj = {
+          name: `${json.results[0].name.title} ${json.results[0].name.first} ${json.results[0].name.last}`,
+          picture: json.results[0].picture.large,
+          profession: [
+            "Coach",
+            "Senior Admin",
+            "Freelance Therapist",
+            "Cashier",
+            "Urban Planner",
+            "Compliance Officer",
+            "Designer",
+            "Mason",
+            "Mathematician",
+            "Chemist",
+          ][Math.floor(Math.random() * 10)],
+        };
+        setUserData(UserDataObj);
+        setIsLoading(false);
+      });
+  };
+
   return (
     <Box
       sx={{
@@ -168,14 +230,14 @@ const Sidebar = () => {
             )}
           </MenuItem>
 
-          {!isCollapsed && (
+          {!isCollapsed && !isLoading && Object.keys(userData).length ? (
             <Box mb="25px">
               <Box display="flex" justifyContent="center" alignItems="center">
                 <img
                   alt="profile-user"
                   width="100px"
                   height="100px"
-                  src={`/assets/user.jpg`}
+                  src={userData.picture}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>
@@ -186,21 +248,22 @@ const Sidebar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  Abhishek Shukla
+                  {userData.name}
                 </Typography>
                 <Typography variant="h5" color={colors.greenAccent[500]}>
-                  Senior Admin
+                  {userData.profession}
                 </Typography>
               </Box>
             </Box>
+          ) : (
+            circularProfileLoader()
           )}
 
           <Box paddingLeft={isCollapsed ? undefined : "10%"}>
             {SidebarData.map((SidebarItem, i) => (
               // 1, 3, 6
-              <div  key={SidebarItem.to}>
+              <div key={SidebarItem.to}>
                 <Item
-                 
                   title={SidebarItem.title}
                   to={SidebarItem.to}
                   icon={SidebarItem.icon}
