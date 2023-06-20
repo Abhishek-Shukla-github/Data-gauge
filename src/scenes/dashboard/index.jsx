@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import { mockTransactions } from "../../data/mockData";
+// import { mockTransactions } from "../../data/mockData";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import EmailIcon from "@mui/icons-material/Email";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
@@ -21,23 +21,41 @@ import "../../mirage/mirage";
 
 const Dashboard = () => {
   // <-------------------------------------------------------------CONSTANTS------------------------------------------------------------------------->
-  const ref = useRef(false);  //Ref is used to prevent the twice execution of useEffect
+  const observer = useRef();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const urlsToBeLoaded = ["/api/emailsCount", "/api/salesCount"];
   const StateKeywords = ["emailsCount", "salesCount"];
-
+  const transactionLoaderStyles = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "75%",
+  }
+  
   // <-------------------------------------------------------------STATES------------------------------------------------------------------------->
+  const [isLazyAPILoading, setIsLazyAPILoading] = useState(true);
+  const [mockTransactions , setMockTransactions] = useState([]);
   const [loadingStates, setLoadingStates] = useState({
     emailsCount: false,
     salesCount: false,
     newClientsCount: false,
   });
   const [dataState, setDataState] = useState({});
+  const [offSet, setOffSet] = useState(0);
+  const lastElementRef = useCallback(node => {
+    if (isLazyAPILoading) return
+    if (observer.current) observer.current.disconnect()
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting ) {
+        setOffSet(prevoffSet => prevoffSet + 10)
+      }
+    })
+    if (node) observer.current.observe(node)
+  }, [isLazyAPILoading])
 
   // <-------------------------------------------------------------useEFFECTS------------------------------------------------------------------------->
   useEffect(() => {
-    if(ref.current === false){
       CommonAPICaller(
         urlsToBeLoaded,
         StateKeywords,
@@ -52,9 +70,11 @@ const Dashboard = () => {
         null,
         toastNotifications,
       );
-      return () => ref.current = true;
-    }
   }, []);
+
+  useEffect(() => {
+      callLazyAPI();
+  }, [offSet]);
 
   useEffect(() => {
     if (dataState?.salesCount)
@@ -93,12 +113,12 @@ const Dashboard = () => {
     );
   };
 
-  const renderDotLoader = () => {
+  const renderDotLoader = (height = "30", width = "60", radius = "9") => {
     return (
       <ThreeDots
-        height="30"
-        width="60"
-        radius="9"
+        height= {height}
+        width={width}
+        radius={radius}
         color="#4cceac"
         ariaLabel="three-dots-loading"
         wrapperStyle={{}}
@@ -137,6 +157,80 @@ const Dashboard = () => {
     })
   }
 
+  const callLazyAPI = () => {
+    setIsLazyAPILoading(true)
+    fetch(`https://api.escuelajs.co/api/v1/products?offset=${offSet}&limit=10`)
+    .then((response) => response.json())
+    .then((json) =>{
+      setIsLazyAPILoading(false)
+      setMockTransactions(prevState => [...prevState,...json])
+    });
+  }
+
+  const renderMockTransactions = () => {
+   return mockTransactions.length ? mockTransactions.map((transaction, i) => (
+      mockTransactions.length === i+4 ?     
+      <Box
+      ref={lastElementRef}
+      key={`${transaction.id}-${i}`}
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      borderBottom={`4px solid ${colors.primary[500]}`}
+      p="15px"
+    >
+      <Box>
+        <Typography
+          color={colors.greenAccent[500]}
+          variant="h5"
+          fontWeight="600"
+        >
+          #-{transaction.id}
+        </Typography>
+        <Typography color={colors.grey[100]}>
+          {transaction.title}
+        </Typography>
+      </Box>
+      <Box color={colors.grey[100]}>{transaction.updatedAt}</Box>
+      <Box
+        backgroundColor={colors.greenAccent[500]}
+        p="5px 10px"
+        borderRadius="4px"
+      >
+        ${transaction.price}
+      </Box>
+    </Box>
+      : <Box
+        key={`${transaction.id}-${i}`}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        borderBottom={`4px solid ${colors.primary[500]}`}
+        p="15px"
+      >
+        <Box>
+          <Typography
+            color={colors.greenAccent[500]}
+            variant="h5"
+            fontWeight="600"
+          >
+            #-{transaction.id}
+          </Typography>
+          <Typography color={colors.grey[100]}>
+            {transaction.title}
+          </Typography>
+        </Box>
+        <Box color={colors.grey[100]}>{transaction.updatedAt}</Box>
+        <Box
+          backgroundColor={colors.greenAccent[500]}
+          p="5px 10px"
+          borderRadius="4px"
+        >
+          ${transaction.price}
+        </Box>
+      </Box>
+    )): <div style={transactionLoaderStyles}>{renderDotLoader("60", "90","9")}</div>
+  }
 
   return (
     <Box m="20px">
@@ -333,37 +427,7 @@ const Dashboard = () => {
               Recent Transactions
             </Typography>
           </Box>
-          {mockTransactions.map((transaction, i) => (
-            <Box
-              key={`${transaction.txId}-${i}`}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              borderBottom={`4px solid ${colors.primary[500]}`}
-              p="15px"
-            >
-              <Box>
-                <Typography
-                  color={colors.greenAccent[500]}
-                  variant="h5"
-                  fontWeight="600"
-                >
-                  {transaction.txId}
-                </Typography>
-                <Typography color={colors.grey[100]}>
-                  {transaction.user}
-                </Typography>
-              </Box>
-              <Box color={colors.grey[100]}>{transaction.date}</Box>
-              <Box
-                backgroundColor={colors.greenAccent[500]}
-                p="5px 10px"
-                borderRadius="4px"
-              >
-                ${transaction.cost}
-              </Box>
-            </Box>
-          ))}
+          {renderMockTransactions()}
         </Box>
 
         {/* ROW 3 */}

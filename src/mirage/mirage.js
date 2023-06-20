@@ -28,5 +28,7 @@ createServer({
         progress: 0.5
       };
     });
+
+    this.passthrough("https://api.escuelajs.co/**")
   },
 });
