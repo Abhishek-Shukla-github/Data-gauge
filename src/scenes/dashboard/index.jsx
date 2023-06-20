@@ -16,11 +16,14 @@ import ProgressCircle from "../../components/ProgressCircle";
 import { Bars, ThreeDots } from "react-loader-spinner";
 import { CommonAPICaller } from "../../utils/api";
 import { ToastContainer, toast } from "react-toastify";
+import { useReactToPrint } from 'react-to-print';
 import "react-toastify/dist/ReactToastify.css";
 import "../../mirage/mirage";
 
 const Dashboard = () => {
   // <-------------------------------------------------------------CONSTANTS------------------------------------------------------------------------->
+  const componentRef = useRef();
+  const graphRef = useRef();
   const observer = useRef();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -232,8 +235,17 @@ const Dashboard = () => {
     )): <div style={transactionLoaderStyles}>{renderDotLoader("60", "90","9")}</div>
   }
 
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
+  const handleGraphPrint = useReactToPrint({
+    content: () => graphRef.current,
+  });
+
+
   return (
-    <Box m="20px">
+    <Box m="20px" ref={componentRef}>
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -249,7 +261,7 @@ const Dashboard = () => {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
         <Box>
-          <Button
+          <Button  onClick={handlePrint}
             sx={{
               backgroundColor: colors.blueAccent[700],
               color: colors.grey[100],
@@ -373,6 +385,7 @@ const Dashboard = () => {
           gridColumn="span 8"
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
+          ref={graphRef}
         >
           <Box
             mt="25px"
@@ -397,15 +410,15 @@ const Dashboard = () => {
                 $59,342.32
               </Typography>
             </Box>
-            <Box>
-              <IconButton>
+            <Box >
+              <IconButton onClick={handleGraphPrint}>
                 <DownloadOutlinedIcon
                   sx={{ fontSize: "26px", color: colors.greenAccent[500] }}
                 />
               </IconButton>
             </Box>
           </Box>
-          <Box height="250px" m="-20px 0 0 0">
+          <Box height="250px" m="-20px 0 0 0" >
             <LineChart isDashboard={true} />
           </Box>
         </Box>
